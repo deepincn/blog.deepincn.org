@@ -73,6 +73,12 @@ GNOME 和 KDE 现在已经完成了 `systemd session` 的工作，我们可以�
 
 `dde-session-shutdown.target` 中又会清理 `dbus.service` 下的所有程序，这样就避免了服务可以通过 dbus 逃逸出会话。
 
+<center>
+
+![](Starting-sessions-with-systemd/model.svg)
+
+</center>
+
 ## 引用资料
 
 > [https://blogs.gnome.org/benzea/2019/10/01/gnome-3-34-is-now-managed-using-systemd/](https://blogs.gnome.org/benzea/2019/10/01/gnome-3-34-is-now-managed-using-systemd/)
