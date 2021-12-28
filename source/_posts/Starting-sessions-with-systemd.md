@@ -59,23 +59,68 @@ GNOME 和 KDE 现在已经完成了 `systemd session` 的工作，我们可以�
 
 ### 启动入口
 
-首先我们需要一个服务单元 `dde-session-manager.service` 同步运行，在这个服务单元里，用来执行 `dde-session-manager`，原本的会话入口会将功能转移到 `dde-session-manager` 和 相关的 `systemd --user services` 中，它只提供一个 dbus 服务，和启动 `dde-session-manager.service` 单元本身，在这个服务单元中，`dde-session-manager` 会监听 `startdde` 的 dbus 是否存在，如果不存在，就会认为会话已经结束，在服务单元的 `ExecStop` 中执行 `dde-session-shutdown.target`，用来集中处理注销会话以后的清理动作。
+首先我们需要创建一系列的 `service` 和 `target` 文件。
+
+```
+dde-session-initialized.target
+dde-session-manager.service
+dde-session-manager.target
+dde-session-pre.target
+dde-session-restart-dbus.service
+dde-session-shutdown.service
+dde-session-shutdown.target
+dde-session-signal-init.service
+dde-session.target
+dde-session-x11-services-ready.target
+dde-session-x11-services.target
+dde-session-x11.target
+```
+
+看起来非常的多，不用担心，他们都有各自的作用，你可以认为这是将生命周期在 `systemd` 实现了。
+
+由于 `systemd` 会帮助我们自动完成依赖解析，那么我们只需要保留一个入口服务，其它服务都禁止手动启动即可。
+
+我选择使用 `dde-session-x11.target` 作为入口，因为未来 deepin 还要支持 wayland，那么在这里就区分开会比较方便一些，因为桌面环境的后续启动与使用什么图形服务没有太大关系。
+
+根据文件名称就可以方便的了解到这些文件是在什么阶段被执行的。
 
 ### 退出时清理
 
-创建 `dde-session-shutdown.target` 用来关联所有退出时需要执行的 `services`。
+创建的 `dde-session-shutdown.target` 用来关联所有退出时需要执行的 `services`。
 
 ### 清理 dbus.service
 
-在 `dde-session-shutdown.target` 中提供一个用于停止 `dbus.service` 的服务，名称就叫做 `dde-session-restart-dbus.service` 好了。
+提供了一个 `dde-session-restart-dbus.service` 用来注销以后关闭 `dbus.service`，不要问，问就是没办法～。
+
+在 `dde-session-shutdown.target` 中会关联这个服务，当用户的会话注销或者桌面环境服务出现问题时，就可以退出所有的 `dbus.service`。
 
 当发现会话注销时，`dde-session-manager.service` 会执行退出，在服务关闭时启动 `dde-session-shutdown.target`，并且使用 `replace-irreversibly` 标记为不可撤销。
 
 `dde-session-shutdown.target` 中又会清理 `dbus.service` 下的所有程序，这样就避免了服务可以通过 dbus 逃逸出会话。
 
+### 架构模型
+
 <center>
 
 ![](Starting-sessions-with-systemd/model.svg)
+
+</center>
+
+### 最终效果
+
+可以看到 startdde 和它的进程树挂在 systemd 下面。
+
+<center>
+
+![](Starting-sessions-with-systemd/110276978.jpeg)
+
+</center>
+
+原本的位置现在只有一个占位的程序。
+
+<center>
+
+![](Starting-sessions-with-systemd/3503592248.jpeg)
 
 </center>
 
