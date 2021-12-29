@@ -73,11 +73,11 @@ dde-session-pre.target
 dde-session-restart-dbus.service
 dde-session-shutdown.service
 dde-session-shutdown.target
-dde-session-signal-init.service
 dde-session.target
 dde-session-x11-services-ready.target
 dde-session-x11-services.target
 dde-session-x11.target
+org.deepin.Session.service
 ```
 
 看起来非常的多，不用担心，他们都有各自的作用，你可以认为这是将生命周期在 `systemd` 实现了。
