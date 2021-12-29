@@ -15,7 +15,9 @@ DDE 现在正在做 Wayland 的支持，所以我们需要对目前的桌面环�
 
 ## 不使用 systemd 来管理 session 会有什么问题吗？
 
-如果按照目前 DDE 的架构模型，通过 `systemd` 启动的服务，其实是无法被管理的，我先来简单介绍一下目前 DDE 的工作模型：
+存在一个进程逃逸问题，不过这个问题与是否采用 `systemd` 管理 `session` 没有太大关系。
+
+我先来简单介绍一下目前 DDE 的工作模型：
 
 首先，DDE 使用 `LightDM` 作为显示服务器（Display Manager），DDE 提供了 `lightdm-deepin-greeter` 作为登录界面，greeter 可以通过调用 LightDM 的 api 进行 linux-pam 的认证。
 
@@ -32,7 +34,9 @@ DDE 现在正在做 Wayland 的支持，所以我们需要对目前的桌面环�
 
 ## 解决方案？
 
-但是刚才不是说了吗，`systemd --user` 并不会停止，需要怎么修改才能符合桌面环境的要求？
+如果只是想解决逃逸问题，那么想一个办法，在 `session` 停止的时候，主动把 `dbus.service` 服务停掉其实就可以解决了，但是这样就无法利用 `systemd` 的自动依赖解决了。
+
+那么需要怎么修改才能符合桌面环境的要求？
 
 GNOME 和 KDE 现在已经完成了 `systemd session` 的工作，我们可以在这两个老大哥身上学习。
 
